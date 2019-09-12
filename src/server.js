@@ -1,17 +1,28 @@
-const http = require("http");
-const url = require("url");
-const router = require("./routes/router");
+
+const router = require('./routes/router');
+const express = require('express');
+const bodyParser = require('body-parser');
+
+const app = express();
+
+const errorHandler = (err, req, res, next) => {
+  res
+    .status(500)
+    .send('Error found: ' + err.stack);
+};
 
 const startServer = port => {
-  const server = http.createServer((request, response) => {
-        
-    const parsedUrl = url.parse(request.url);
-    request.parsedPath = parsedUrl.path.split("/");
-    const func = router[request.parsedPath[1]] || router.default;
-    func(request, response);
-  });
+  app
+    .use(bodyParser.urlencoded({
+      extended: false
+    }))
+    .use(bodyParser.json())
+    .use('/', router)
+    .use(errorHandler)
 
-  server.listen(port);
-};
+  app.listen(port, () => {
+    console.log(`server is listening on ${port}`)
+  });
+}
 
 module.exports = startServer;
